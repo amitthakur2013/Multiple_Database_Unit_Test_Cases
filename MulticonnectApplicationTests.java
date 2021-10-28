@@ -2,51 +2,62 @@ package com.datasource.multiconnect;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.when;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.sql.DataSource;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+
+import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.mock.jndi.SimpleNamingContextBuilder;
+import org.springframework.context.ApplicationContext;
+
+import com.datasource.multiconnect.model.Employee;
+import com.datasource.multiconnect.repository.EmployeeRepository;
+import com.datasource.multiconnect.service.MultipleDaoService;
+
 
 @SpringBootTest
 class MulticonnectApplicationTests {
 
-	private Context initContext;
-
-	@BeforeEach
-	public void init() throws Exception {
-		SimpleNamingContextBuilder.emptyActivatedContextBuilder();
-		this.initContext = new InitialContext();
-	}
+	@Mock
+	ApplicationContext apc;
+	
+	@Mock
+	EmployeeRepository empmapper;
+	
+	@Mock
+	SqlSessionTemplate sst;
+	
+	@InjectMocks
+	MultipleDaoService multipleDaoService;
 
 	@Test
-	public void whenMockJndiDataSource_thenReturnJndiDataSource() throws Exception {
-		// Primary Datasouce
+	public void test_getAllEmployees() {
 		
-		//Binding to the test context primary datasource global name
-		this.initContext.bind("java:comp/env/jdbc/primary", new DriverManagerDataSource("jdbc:h2:mem:testdb"));
-		//Looking up the datasource with global name
-		DataSource ds = (DataSource) this.initContext.lookup("java:comp/env/jdbc/primary");
-		// Asserting whether getting the datasource with given name
-		assertNotNull(ds.getConnection());
-
+		List<Employee> empList=new ArrayList<>();
 		
-		// Secondary Datasource
+		Employee emp1=new Employee(5,"amit","thakur","akt123@gmail.com");
+		Employee emp2=new Employee(6,"amit","thakur","akt123@gmail.com");
+		Employee emp3=new Employee(8,"amit","thakur","akt123@gmail.com");
+		Employee emp4=new Employee(10,"amit","thakur","akt123@gmail.com");
 		
-		this.initContext.bind("java:comp/env/jdbc/secondary", new DriverManagerDataSource("jdbc:h2:mem:testdb2"));
-		DataSource ds2 = (DataSource) this.initContext.lookup("java:comp/env/jdbc/secondary");
-		assertNotNull(ds2.getConnection());
+		empList.add(emp1);
+		empList.add(emp2);
+		empList.add(emp3);
+		empList.add(emp4);
 		
-		// Tertiary Datasource
+		when(apc.getBean("sqlSessionTemplatePrimary")).thenReturn(sst);
+		when(sst.getMapper(EmployeeRepository.class)).thenReturn(empmapper);
+		when(empmapper.findAll()).thenReturn(empList);
 		
-		this.initContext.bind("java:comp/env/jdbc/tertiary", new DriverManagerDataSource("jdbc:h2:mem:testdb2"));
-		DataSource ds3 = (DataSource) this.initContext.lookup("java:comp/env/jdbc/tertiary");
-		assertNotNull(ds3.getConnection());
+		List<Employee> empList2=multipleDaoService.getAllEmployees("Primary");
+		
+		assertEquals(4, empList2.size());
+		assertEquals(empList.size(), empList2.size());
 
 	}
 
