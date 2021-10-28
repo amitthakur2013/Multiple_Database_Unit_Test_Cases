@@ -16,7 +16,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 
 import com.datasource.multiconnect.model.Employee;
+import com.datasource.multiconnect.model.Student;
 import com.datasource.multiconnect.repository.EmployeeRepository;
+import com.datasource.multiconnect.repository.StudentRepository;
 import com.datasource.multiconnect.service.MultipleDaoService;
 
 
@@ -28,6 +30,9 @@ class MulticonnectApplicationTests {
 	
 	@Mock
 	EmployeeRepository empmapper;
+	
+	@Mock
+	StudentRepository stmapper;
 	
 	@Mock
 	SqlSessionTemplate sst;
@@ -59,6 +64,25 @@ class MulticonnectApplicationTests {
 		assertEquals(4, empList2.size());
 		assertEquals(empList.size(), empList2.size());
 
+	}
+	
+	@Test
+	public void test_getAllStudents() {
+		List<Student> stlist=new ArrayList<>();
+		Student s1=new Student(10,"rakesh");
+		Student s2=new Student(11,"anita");
+		
+		stlist.add(s1);
+		stlist.add(s2);
+		
+		when(apc.getBean("sqlSessionTemplateSecondary")).thenReturn(sst);
+		when(sst.getMapper(StudentRepository.class)).thenReturn(stmapper);
+		when(stmapper.findAllStudents()).thenReturn(stlist);
+		
+		List<Student> stlist2=multipleDaoService.getAllStudents("Secondary");
+		
+		assertEquals(2, stlist2.size());
+		assertEquals(stlist.size(), stlist2.size());
 	}
 
 }
