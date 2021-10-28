@@ -39,6 +39,8 @@ class MulticonnectApplicationTests {
 	
 	@InjectMocks
 	MultipleDaoService multipleDaoService;
+	
+	// For Primary
 
 	@Test
 	public void test_getAllEmployees() {
@@ -65,6 +67,8 @@ class MulticonnectApplicationTests {
 		assertEquals(empList.size(), empList2.size());
 
 	}
+	
+	// For Secondary
 	
 	@Test
 	public void test_getAllStudents() {
